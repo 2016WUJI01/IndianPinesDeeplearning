@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 from model import MulitNet
 from dataLoader import TrainDS, TestDS
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, cohen_kappa_score
-
+from logger import get_logger
 
 
 class_num = 16
@@ -15,8 +16,6 @@ net = MulitNet(class_num=class_num)
 train_loader = torch.utils.data.DataLoader(dataset=TrainDS(), batch_size=1024, shuffle=True, num_workers=0)
 test_loader  = torch.utils.data.DataLoader(dataset=TestDS(),  batch_size=1024, shuffle=False, num_workers=0)
 
-print(len(train_loader))
-print(len(test_loader))
 
 # 使用GPU训练，可以在菜单 "代码执行工具" -> "更改运行时类型" 里进行设置
 
@@ -29,7 +28,7 @@ optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 # 开始训练
 total_loss = 0
-for epoch in range(200):
+for epoch in range(10):
     for i, (inputs, labels) in enumerate(train_loader):
         inputs = inputs.to(device)
         labels = labels.to(device)
@@ -60,5 +59,7 @@ for inputs, _ in test_loader:
         y_pred_test = np.concatenate( (y_pred_test, outputs) )
 
 # 生成分类报告
-classification = classification_report(ytest, y_pred_test, digits=4)
+classification = classification_report(TestDS().y_data, y_pred_test, digits=4)
 print(classification)
+
+logger = get_logger('./log/'+str(class_num)+'_class.log')
