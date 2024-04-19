@@ -3,14 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 from model import MulitNet
 from dataLoader import TrainDS, TestDS
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, cohen_kappa_score
+
+
 
 class_num = 16
 
-x = torch.randn(1, 1, 30, 25, 25)
 net = MulitNet(class_num=class_num)
-
-out = net(x)
-print(out.shape)
 
 
 train_loader = torch.utils.data.DataLoader(dataset=TrainDS(), batch_size=1024, shuffle=True, num_workers=0)
@@ -46,3 +45,20 @@ for epoch in range(200):
         print('[Epoch: %d]   [loss avg: %.4f]   [current loss: %.4f]' %(epoch + 1, total_loss/(epoch+1), loss.item()))
 
 print('Finished Training')
+
+
+count = 0
+# 模型测试
+for inputs, _ in test_loader:
+    inputs = inputs.to(device)
+    outputs = net(inputs)
+    outputs = np.argmax(outputs.detach().cpu().numpy(), axis=1)
+    if count == 0:
+        y_pred_test =  outputs
+        count = 1
+    else:
+        y_pred_test = np.concatenate( (y_pred_test, outputs) )
+
+# 生成分类报告
+classification = classification_report(ytest, y_pred_test, digits=4)
+print(classification)
