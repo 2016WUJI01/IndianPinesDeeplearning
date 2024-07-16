@@ -9,7 +9,7 @@ do
     do
         for epoch in "${epochs[@]}"
         do
-            python train_2.py --lr "$lr" --epochs "$epoch"
+            python train_v2.py --lr "$lr" --epochs "$epoch"
         done
     done
 done

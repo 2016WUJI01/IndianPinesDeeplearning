@@ -13,7 +13,7 @@ from logger import get_logger
 def train(model,optimizer,criterion,train_loader,test_loader,logger,epochs):
     # 开始训练
     total_loss = 0
-    for epoch in range(10):
+    for epoch in range(epochs):
         for i, (inputs, labels) in enumerate(train_loader):
             inputs = inputs.to(device)
             labels = labels.to(device)
