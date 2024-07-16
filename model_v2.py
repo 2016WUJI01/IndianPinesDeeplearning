@@ -2,6 +2,25 @@ import torch
 import torch.nn as nn
 
 
+class SEAttention(nn.Module):
+    def __init__(self, channel=64 * 17 * 17, reduction=16):
+        super(SEAttention, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d((17, 17))
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        B, C, H, W = x.size()
+        y = self.avg_pool(x).view(B, C * H * W)
+        y = self.fc(y).view(B, C, H, W)
+        out = x * y
+        return out
+
+
 class MulitNet(nn.Module):
     def __init__(self, class_num=16):
         super(MulitNet, self).__init__()
@@ -26,6 +45,7 @@ class MulitNet(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
         )
+        self.seAttention = SEAttention()
         self.fc1 = nn.Linear(18496, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, class_num)
@@ -37,6 +57,7 @@ class MulitNet(nn.Module):
         out = self.conv3d_2(out)
         out = self.conv3d_3(out)
         out = self.conv2d_4(out.reshape(out.shape[0], -1, 19, 19))
+        out = self.seAttention(out)
         out = out.reshape(out.shape[0], -1)
         out = self.relu(self.dropout(self.fc1(out)))
         out = self.relu(self.dropout(self.fc2(out)))
